@@ -1,4 +1,5 @@
-import { openDb } from "../configDB.js";
+// createTableUsers.js
+import { openDb } from "./configDB.js";
 
 export async function createUsersTable() {
   try {
@@ -7,5 +8,6 @@ export async function createUsersTable() {
     console.log("Tabela Users criada ou já existe.");
   } catch (error) {
     console.error("Erro ao criar tabela Users:", error.message);
+    throw error; // Re-throw o erro para que ele seja capturado em quem chama esta função
   }
 }

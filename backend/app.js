@@ -1,5 +1,14 @@
+// app.js
+
 import express from 'express';
-import pessoaRoutes from './routes/Pessoa';
+import dotenv from 'dotenv';
+import { createTable as createPessoaTable } from './models/Pessoa.js'; // Importe as funções necessárias diretamente
+import pessoaRoutes from './routes/pessoaRoutes.js';
+import authRoutes from './routes/auth.js';
+import { createUsersTable } from './createTableUsers.js';
+import { openDb } from './configDB.js';
+
+dotenv.config();
 
 const app = express();
 app.use(express.json());
@@ -9,14 +18,26 @@ app.get('/', (req, res) => {
 });
 
 app.use('/pessoas', pessoaRoutes);
+app.use('/auth', authRoutes);
 
-app.post('/auth/login', (req, res) => {
-  const { username, password } = req.body;
-  if (username === 'juiz' && password === '123') {
-    res.status(200).json({ msg: 'Login bem-sucedido!' });
-  } else {
-    res.status(401).json({ msg: 'Nome de usuário ou senha incorretos.' });
-  }
+// Middleware de tratamento de erros
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(500).send('Algo deu errado!');
 });
 
-app.listen(3000, () => console.log("API rodando na porta 3000..."));
+// Função para criar a tabela Users ao iniciar
+async function initializeApp() {
+  try {
+    await createUsersTable();
+    await createPessoaTable(); // Chame a função de criação de tabela para Pessoa
+    const PORT = process.env.PORT || 3000;
+    app.listen(PORT, () => console.log(`API rodando na porta ${PORT}...`));
+  } catch (error) {
+    console.error("Erro ao iniciar a aplicação:", error.message);
+    process.exit(1); // Encerra o processo com código de erro
+  }
+}
+
+// Inicializa a aplicação
+initializeApp();
